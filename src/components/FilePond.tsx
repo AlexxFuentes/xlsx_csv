@@ -14,7 +14,6 @@ interface props {
     header: string[];
     range: Range;
     setData: (file: any) => void;
-    // setWb: (file: any) => void;
 }
 
 export function FileUpload({ header, range, setData } : props) {
@@ -33,7 +32,6 @@ export function FileUpload({ header, range, setData } : props) {
             
             // console.log(jsonData)
             setData(jsonData)
-            // setWb(wb)
         };
         reader.readAsArrayBuffer(file.file)
     };
