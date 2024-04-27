@@ -4,39 +4,45 @@ import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css'
 import { FilePond, registerPlugin } from 'react-filepond'
 import FilePondPluginImageExifOrientation from 'filepond-plugin-image-exif-orientation'
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview'
-import { useState } from 'react'
-import { read, utils } from 'xlsx';
-// import * as XLSX from 'xlsx';
+import { read, utils, Range } from 'xlsx'
 import { FilePondFile } from 'filepond'
+import { useState } from 'react'
 
 registerPlugin(FilePondPluginImageExifOrientation, FilePondPluginImagePreview)
 
-export function FileUpload() {
+interface props {
+    header: string[];
+    range: Range;
+    setData: (file: any) => void;
+    // setWb: (file: any) => void;
+}
 
-    const [files, setFiles] = useState<FilePondFile[]>([])
+export function FileUpload({ header, range, setData } : props) {
+
+    const [file, setFile] = useState<FilePondFile[]>([])
+
 
     const handleFileLoad = (file: FilePondFile) => {
-        console.log("Se ejecuta handleFileLoad");
-        const reader = new FileReader();
+        const reader = new FileReader()
         reader.onload = (event: ProgressEvent<FileReader>) => {
-            const data = new Uint8Array(event?.target?.result as ArrayBuffer);
-            const workbook = read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const worksheet = workbook.Sheets[sheetName];
-            const jsonData = utils.sheet_to_json(worksheet);
+            const f: ArrayBuffer = new Uint8Array(event?.target?.result as ArrayBuffer)
 
-            // Aquí puedes realizar la limpieza de datos necesaria en jsonData
+            const wb = read(f, { type: 'array'});
+            const ws = wb.Sheets[wb.SheetNames[0]]
+            const jsonData = utils.sheet_to_json(ws, { header: header, range: range })            
             
-            console.log(jsonData);
+            // console.log(jsonData)
+            setData(jsonData)
+            // setWb(wb)
         };
-        reader.readAsArrayBuffer(file.file);
+        reader.readAsArrayBuffer(file.file)
     };
 
     return (
         <div className='max-w-md mx-auto'>
             <FilePond
-                files={files as any[]}
-                onupdatefiles={setFiles}
+                files={file as any[]}
+                onupdatefiles={setFile}
                 allowMultiple={true}
                 maxFiles={3}
                 name="files"
@@ -44,9 +50,12 @@ export function FileUpload() {
                 //server="/"
                 onaddfile={(error, file: FilePondFile) => {
                     if (error) {
-                        alert(`Error al cargar el archivo ${error}`);
+                        alert(`Error al cargar el archivo ${error}`)
                     }
-                    handleFileLoad(file);
+                    handleFileLoad(file)
+                }}
+                onremovefile={() => {
+                    setData([])
                 }}
             />
         </div>
